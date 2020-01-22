@@ -2,6 +2,8 @@
 
 Private function arguments for creating closures implicitly.
 
+[Discussion on TC39 Discourse](https://es.discourse.group/t/private-function-arguments-for-creating-closures-implicitly/199)
+
 ## Motivation
 
 Tail recursive function parameters should be encapsulated in a closure to avoid modifying them from the outside. The following code demonstrates calculating the factorial of an integer:

@@ -65,6 +65,44 @@ function fn2(x, y = 1, #a = 2, #b = 3) {} // Correct
 
 To retain backwards compatibility, the function-specific `arguments` object shall not include private arguments.
 
+### When transformed, the inner function should forward operations to the outer method
+
+As observed in [issue #2](https://github.com/kripod/tc39-proposal-private-function-arguments/issues/2), the following code should always modify the outer function:
+
+```js
+fact.x = 'test';
+function fact(n, #acc = 1) {
+  if (n > 0) return fact(n - 1, n * #acc);
+  console.log(fact.x); // 'test'
+  return #acc;
+}
+```
+
+However, a `Proxy` is required to bridge the gap between `fact_inner` and `fact.x` inside the function body:
+
+```js
+function fact(n) {
+  function fact_inner(n, acc) {
+    if (n > 0) return fact_inner(n - 1, n * acc);
+    return acc;
+  }
+  const fact_inner_proxy = new Proxy(
+    fact_inner,
+    {
+      set(_obj, prop, value) {
+        fact[prop] = value;
+        return true;
+      },
+      get(_obj, prop) {
+        return fact[prop];
+      },
+      // Other traps may also be added
+    },
+  );
+  return fact_inner_proxy(n, 1);
+}
+```
+
 ### Optimization opportunities for preprocessors
 
 By detecting the operator usage sorrounding private arguments, a compiler may be able to optimize `const x = 20 * fact(3)` as follows:

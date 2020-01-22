@@ -35,14 +35,33 @@ Transformation between the presented code snippets is possible with transpilers.
 
 Private arguments shall not be seen by callers. Extra parameters provided beyond the public ones shall be ignored. The value of private arguments may not be overrided from outside the scope of the function body. For example, calling `fact(3, 999, null)` should retain the value of `#acc = 1` by ignoring superfluous parameters.
 
-In order to avoid confusion between the order of parameters, private arguments should be specified after their public counterparts, even including rest parameters:
+In order to avoid confusion between the order of parameters, private arguments should be specified after their public counterparts:
 
 ```js
-// The public method signature seen by callers is `fn(x, y, ...rest)`
-function fn(x, y, ...rest, #a = 0, #b) { /* ... */ }
+// The public method signature seen by callers is `fn(x, y)`
+function fn(x, y, #a = 0, #b) { /* ... */ }
 ```
 
-Please take note that private arguments may not need to be initialized. They act like syntactic sugar for defining a new closure with multiple outer variables.
+Please take note that private arguments act like syntactic sugar for defining a new closure with multiple outer variables.
+
+### Rest parameters may not be mixed with private arguments
+
+- Private rest parameters like `...#args` or `#...args` are out of consideration, as they provide no known value as accumulator variables. However, if a specific use-case was missed, please open a new issue regarding the case!
+
+- Concerns were [raised](https://github.com/kripod/tc39-proposal-private-function-arguments/issues/1) about compatibility with public rest parameters. Being the least confusing approach to date, private arguments shall not be allowed alongside rest parameters.
+
+### Default values for private arguments are mandatory
+
+As [private arguments shall be specified after public ones](#private-arguments-shall-be-specified-after-public-ones), it would not make sense to allow private arguments without a default parameter, as the last public argument may also be optional.
+
+```js
+function fn1(x, y = 1, #a,     #b = 3) {} // Incorrect
+function fn2(x, y = 1, #a = 2, #b = 3) {} // Correct
+```
+
+### `arguments` are not modified
+
+To retain backwards compatibility, the function-specific `arguments` object shall not include private arguments.
 
 ### Optimization opportunities for preprocessors
 
